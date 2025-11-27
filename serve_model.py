@@ -13,17 +13,12 @@ app = FastAPI(title="Support Ticket Analyzer API")
 class Ticket(BaseModel):
     text: str
 
-# -------------------------------------------------
-# Load sentiment model
-# -------------------------------------------------
 classifier_name = "distilbert-base-uncased-finetuned-sst-2-english"
 classifier_tokenizer = AutoTokenizer.from_pretrained(classifier_name)
 classifier_model = AutoModelForSequenceClassification.from_pretrained(classifier_name)
 classifier_model.eval()
 
-# -------------------------------------------------
-# Load TWO summarizers
-# -------------------------------------------------
+
 summ_short = pipeline(
     "summarization",
     model="facebook/bart-large-cnn",
@@ -36,9 +31,6 @@ summ_long = pipeline(
     device=0 if torch.cuda.is_available() else -1
 )
 
-# -------------------------------------------------
-# Helpers
-# -------------------------------------------------
 def extract_customer_text(text):
     """Extract only customer parts from dialog-style input."""
     lines = text.strip().split("\n")
@@ -81,10 +73,6 @@ def summarize_text(text: str) -> str:
     )
     return out[0]["summary_text"]
 
-
-# -------------------------------------------------
-# API
-# -------------------------------------------------
 @app.post("/analyze")
 def analyze(ticket: Ticket):
     cleaned = extract_customer_text(ticket.text)
@@ -120,4 +108,5 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
 
